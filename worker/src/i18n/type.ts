@@ -70,6 +70,8 @@ export type LocaleMessages = {
     EnableResendOrSmtpMsg: string
     EnableResendOrSmtpWithVerifiedMsg: string
     InvalidToMailMsg: string
+    AddressExpiredMsg: string
+    WildcardSendUnsupportedMsg: string
 
     // Admin related
     InvalidAddressIdMsg: string

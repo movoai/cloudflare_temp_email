@@ -9,6 +9,7 @@ import { CONSTANTS } from '../constants'
 import { getJsonSetting, getDomains, getIntValue, getBooleanValue, getStringValue, getJsonObjectValue, getSplitStringListValue } from '../utils';
 import { GeoData } from '../models'
 import { handleListQuery, updateAddressUpdatedAt } from '../common'
+import { assertActiveAddressRow, assertSendSupportedAddressRow } from '../cloudflare_wildcard';
 
 
 export const api = new Hono<HonoCustomType>()
@@ -20,6 +21,11 @@ api.post('/api/request_send_mail_access', async (c) => {
         return c.text(msgs.AddressNotFoundMsg, 400)
     }
     try {
+        const addressRow = await c.env.DB.prepare(
+            `SELECT name, source_meta, expires_at FROM address WHERE name = ? LIMIT 1`
+        ).bind(address).first();
+        assertActiveAddressRow(addressRow);
+        assertSendSupportedAddressRow(addressRow);
         const default_balance = getIntValue(c.env.DEFAULT_SEND_BALANCE, 0);
         const { success } = await c.env.DB.prepare(
             `INSERT INTO address_sender (address, balance, enabled) VALUES (?, ?, ?)`
@@ -130,6 +136,13 @@ export const sendMail = async (
     const msgs = i18n.getMessagesbyContext(c);
     if (!address) {
         throw new Error(msgs.AddressNotFoundMsg)
+    }
+    const addressRow = await c.env.DB.prepare(
+        `SELECT name, source_meta, expires_at FROM address WHERE name = ? LIMIT 1`
+    ).bind(address).first();
+    if (addressRow) {
+        assertActiveAddressRow(addressRow);
+        assertSendSupportedAddressRow(addressRow);
     }
     // check domain
     const mailDomain = address.split("@")[1];

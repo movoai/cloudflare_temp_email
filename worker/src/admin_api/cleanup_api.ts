@@ -60,6 +60,34 @@ export const validateCustomSql = (sql: string): { valid: boolean; errorType?: Sq
         return { valid: false, errorType: 'has_comments' };
     }
 
+    const normalizeSqlIdentifier = (value: string): string => {
+        const trimmed = value.trim();
+        if (
+            (trimmed.startsWith('"') && trimmed.endsWith('"'))
+            || (trimmed.startsWith('`') && trimmed.endsWith('`'))
+            || (trimmed.startsWith('[') && trimmed.endsWith(']'))
+        ) {
+            return trimmed.slice(1, -1).toLowerCase();
+        }
+        return trimmed.toLowerCase();
+    };
+
+    const getDeleteTargetTable = (statement: string): string | null => {
+        const match = statement.match(
+            /^DELETE\s+FROM\s+((?:(?:"[^"]+"|`[^`]+`|\[[^\]]+\]|[A-Za-z_][A-Za-z0-9_]*)\s*\.\s*)?(?:"[^"]+"|`[^`]+`|\[[^\]]+\]|[A-Za-z_][A-Za-z0-9_]*))/i
+        );
+        if (!match?.[1]) {
+            return null;
+        }
+        const parts = match[1].split('.').map((part) => normalizeSqlIdentifier(part));
+        return parts[parts.length - 1] || null;
+    };
+
+    const deleteTarget = getDeleteTargetTable(trimmedSql);
+    if (deleteTarget && ['address', 'users_address'].includes(deleteTarget)) {
+        return { valid: false, errorType: 'not_delete' };
+    }
+
     return { valid: true };
 };
 

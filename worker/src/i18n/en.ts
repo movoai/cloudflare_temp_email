@@ -72,6 +72,8 @@ const messages: LocaleMessages = {
     EnableResendOrSmtpMsg: "Please enable resend or smtp for this domain",
     EnableResendOrSmtpWithVerifiedMsg: "Please enable resend or smtp for this domain, or add recipient to verified address list",
     InvalidToMailMsg: "Invalid recipient address",
+    AddressExpiredMsg: "Address expired",
+    WildcardSendUnsupportedMsg: "Cloudflare wildcard addresses do not support sending mail",
 
     // Admin related
     InvalidAddressIdMsg: "Invalid address_id",

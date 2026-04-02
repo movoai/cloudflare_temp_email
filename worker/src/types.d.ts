@@ -115,7 +115,8 @@ type Variables = {
     userPayload: UserPayload,
     userRolePayload: string | undefined | null,
     jwtPayload: JwtPayload,
-    lang: string | undefined | null
+    lang: string | undefined | null,
+    activeAddressRow: { id: number; name: string; expires_at: string | null } | undefined
 }
 
 type HonoCustomType = {

@@ -148,3 +148,27 @@ export const mapWildcardRulesToOpenSettings = (activeRules: string[]) => ({
   defaultDomains: activeRules,
   domainLabels: activeRules,
 });
+
+
+export const isAddressActive = (
+  row: { expires_at?: string | null },
+  now = new Date(),
+): boolean => !!row?.expires_at && new Date(String(row.expires_at).replace(' ', 'T') + 'Z').getTime() > now.getTime();
+
+export const assertActiveAddressRow = (row: { expires_at?: string | null } | null | undefined): void => {
+  if (!row || !isAddressActive(row)) {
+    throw new Error('Address expired or not found');
+  }
+};
+
+export const isWildcardCreatedAddressRow = (
+  row: { source_meta?: string | null } | null | undefined,
+): boolean => String(row?.source_meta || '').includes('wildcard:');
+
+export const assertSendSupportedAddressRow = (
+  row: { source_meta?: string | null } | null | undefined,
+): void => {
+  if (isWildcardCreatedAddressRow(row)) {
+    throw new Error('Cloudflare wildcard addresses do not support sending mail');
+  }
+};

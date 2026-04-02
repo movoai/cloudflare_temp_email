@@ -3,6 +3,7 @@ import { Jwt } from 'hono/utils/jwt'
 
 import utils, { checkCfTurnstile, getPasswords, getAdminPasswords, hashPassword } from '../utils';
 import i18n from '../i18n';
+import { assertActiveAddressRow } from '../cloudflare_wildcard';
 
 const api = new Hono<HonoCustomType>()
 
@@ -60,7 +61,14 @@ api.post('/open_api/credential_login', async (c) => {
         if (!payload.address) {
             return c.text(msgs.InvalidAddressCredentialMsg, 401)
         }
+        const addressRow = await c.env.DB.prepare(
+            `SELECT id, expires_at FROM address WHERE id = ? OR name = ? LIMIT 1`
+        ).bind(payload.address_id || null, payload.address || null).first();
+        assertActiveAddressRow(addressRow);
     } catch (error) {
+        if ((error as Error).message.includes('Address expired')) {
+            return c.text(msgs.AddressExpiredMsg, 401)
+        }
         return c.text(msgs.InvalidAddressCredentialMsg, 401)
     }
     return c.json({ success: true })

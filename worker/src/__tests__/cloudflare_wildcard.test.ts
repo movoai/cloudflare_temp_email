@@ -9,6 +9,8 @@ import {
   validateCloudflareWildcardSettings,
   mapWildcardRulesToOpenSettings,
   resolveConcreteDomain,
+  isAddressActive,
+  assertSendSupportedAddressRow,
 } from '../cloudflare_wildcard';
 
 describe('cloudflare wildcard helpers', () => {
@@ -89,5 +91,13 @@ describe('cloudflare wildcard helpers', () => {
         makeLabel: () => 'mistbrook',
       }),
     ).toBe('mistbrook.a.com');
+  });
+
+  it('treats past expires_at values as inactive', () => {
+    expect(isAddressActive({ expires_at: '2026-04-01 00:00:00' }, new Date('2026-04-02T00:00:00.000Z'))).toBe(false);
+  });
+
+  it('rejects sending from persisted wildcard-created addresses even if the rule is no longer active', () => {
+    expect(() => assertSendSupportedAddressRow({ source_meta: 'wildcard:*.a.com|origin:web' })).toThrow(/not support/i);
   });
 });

@@ -294,19 +294,19 @@ export const cleanup = async (
         case "inactiveAddress":
             await batchDeleteAddressWithData(
                 c,
-                `updated_at < datetime('now', '-${cleanDays} day')`
+                `updated_at < datetime('now', '-${cleanDays} day') AND expires_at <= datetime('now')`
             )
             break;
         case "addressCreated":
             await batchDeleteAddressWithData(
                 c,
-                `created_at < datetime('now', '-${cleanDays} day')`
+                `created_at < datetime('now', '-${cleanDays} day') AND expires_at <= datetime('now')`
             )
             break;
         case "unboundAddress":
             await batchDeleteAddressWithData(
                 c,
-                `id NOT IN (SELECT address_id FROM users_address) AND created_at < datetime('now', '-${cleanDays} day')`
+                `id NOT IN (SELECT address_id FROM users_address) AND expires_at <= datetime('now')`
             )
             break;
         case "mails":
@@ -329,7 +329,7 @@ export const cleanup = async (
             // Delete addresses that have no emails and were created more than N days ago
             await batchDeleteAddressWithData(
                 c,
-                `name NOT IN (SELECT DISTINCT address FROM raw_mails WHERE address IS NOT NULL) AND created_at < datetime('now', '-${cleanDays} day')`
+                `name NOT IN (SELECT DISTINCT address FROM raw_mails WHERE address IS NOT NULL) AND expires_at <= datetime('now')`
             )
             break;
         default:

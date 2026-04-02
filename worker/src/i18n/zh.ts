@@ -72,6 +72,8 @@ const messages: LocaleMessages = {
     EnableResendOrSmtpMsg: "请先为此域名启用 resend 或 smtp",
     EnableResendOrSmtpWithVerifiedMsg: "请先为此域名启用 resend 或 smtp，或将收件人添加到已验证地址列表",
     InvalidToMailMsg: "收件人地址无效",
+    AddressExpiredMsg: "地址已过期",
+    WildcardSendUnsupportedMsg: "Cloudflare 泛域名地址不支持发信",
 
     // Admin related
     InvalidAddressIdMsg: "无效的 address_id",

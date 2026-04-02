@@ -2,6 +2,7 @@ import { Context } from 'hono';
 import i18n from '../i18n';
 import utils, { getBooleanValue, hashPassword, checkCfTurnstile } from '../utils';
 import { Jwt } from 'hono/utils/jwt';
+import { assertActiveAddressRow } from '../cloudflare_wildcard';
 
 export default {
     // 修改地址密码
@@ -65,6 +66,11 @@ export default {
 
         if (!address) {
             return c.text(msgs.AddressNotFoundMsg, 404);
+        }
+        try {
+            assertActiveAddressRow(address);
+        } catch (error) {
+            return c.text(msgs.AddressExpiredMsg, 401);
         }
 
         // 验证密码

@@ -217,14 +217,17 @@ const UserBindAddressModule = {
         } catch (e) {
             return c.text(msgs.OperationFailedMsg, 500)
         }
+        const oldAddress = await c.env.DB.prepare(
+            `SELECT name, password, source_meta, expires_at FROM address WHERE id = ?`
+        ).bind(address_id).first();
         // delete address
         await c.env.DB.prepare(
             `DELETE FROM address WHERE id = ? `
         ).bind(address_id).run();
         // new address
         const { success: newAddressSuccess } = await c.env.DB.prepare(
-            `INSERT INTO address(name) VALUES(?)`
-        ).bind(address).run();
+            `INSERT INTO address(name, password, source_meta, expires_at) VALUES(?, ?, ?, ?)`
+        ).bind(address, oldAddress?.password || null, oldAddress?.source_meta || null, oldAddress?.expires_at || null).run();
         if (!newAddressSuccess) {
             throw new Error(msgs.FailedCreateAddressMsg)
         }

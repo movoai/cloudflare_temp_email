@@ -16,7 +16,7 @@ import { email } from './email';
 import { scheduled } from './scheduled';
 import { getPasswords, getBooleanValue, checkIsAdmin } from './utils';
 import { checkAccessControl } from './ip_blacklist';
-import { getCloudflareWildcardConfig } from './cloudflare_wildcard';
+import { assertActiveAddressRow, getCloudflareWildcardConfig } from './cloudflare_wildcard';
 
 const API_PATHS = [
 	"/api/",
@@ -163,11 +163,21 @@ app.use('/api/*', async (c, next) => {
 	}
 
 	try {
-		return await jwt({ secret: c.env.JWT_SECRET, alg: "HS256" })(c, next);
+		await jwt({ secret: c.env.JWT_SECRET, alg: "HS256" })(c, async () => undefined);
+		const addressRow = await c.env.DB.prepare(
+			`SELECT id, name, expires_at FROM address WHERE id = ? OR name = ? LIMIT 1`
+		).bind(c.get("jwtPayload")?.address_id || null, c.get("jwtPayload")?.address || null).first<{ id: number; name: string; expires_at: string | null }>();
+		assertActiveAddressRow(addressRow);
+		c.set("activeAddressRow", addressRow);
+		await next();
+		return;
 	} catch (e) {
 		console.warn(e);
 		const lang = c.get("lang") || c.env.DEFAULT_LANG;
 		const msgs = i18n.getMessages(lang);
+		if ((e as Error).message.includes('Address expired')) {
+			return c.text(msgs.AddressExpiredMsg, 401)
+		}
 		return c.text(msgs.InvalidAddressCredentialMsg, 401)
 	}
 });

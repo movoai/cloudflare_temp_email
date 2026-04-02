@@ -1,7 +1,7 @@
 import { Context, Hono } from 'hono'
 
 import i18n from '../i18n';
-import { getBooleanValue, getJsonSetting, checkCfTurnstile, getStringValue, getSplitStringListValue, isAddressCountLimitReached } from '../utils';
+import { getBooleanValue, getJsonSetting, checkCfTurnstile, getStringValue, isAddressCountLimitReached } from '../utils';
 import { newAddress, handleListQuery, deleteAddressWithData, getAddressPrefix, getAllowDomains, updateAddressUpdatedAt, generateRandomName } from '../common'
 import { CONSTANTS } from '../constants'
 import auto_reply from './auto_reply'
@@ -62,7 +62,6 @@ api.delete('/api/mails/:id', async (c) => {
 
 api.get('/api/settings', async (c) => {
     const { address, address_id } = c.get("jwtPayload")
-    const user_role = c.get("userRolePayload")
     const msgs = i18n.getMessagesbyContext(c);
     if (address_id && address_id > 0) {
         try {
@@ -92,14 +91,9 @@ api.get('/api/settings', async (c) => {
 
     updateAddressUpdatedAt(c, address);
 
-    const no_limit_roles = getSplitStringListValue(c.env.NO_LIMIT_SEND_ROLE);
-    const is_no_limit_send_balance = user_role && no_limit_roles.includes(user_role);
-    const balance = is_no_limit_send_balance ? 99999 : await c.env.DB.prepare(
-        `SELECT balance FROM address_sender where address = ? and enabled = 1`
-    ).bind(address).first("balance");
     return c.json({
         address: address,
-        send_balance: balance || 0,
+        send_balance: 0,
     });
 })
 
