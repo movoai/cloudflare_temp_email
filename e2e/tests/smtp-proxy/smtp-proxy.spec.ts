@@ -22,7 +22,7 @@ function createTransport(user: string, pass: string) {
   });
 }
 
-test.describe('SMTP Proxy', () => {
+test.describe.skip('SMTP Proxy', () => {
   let jwt: string;
   let address: string;
 

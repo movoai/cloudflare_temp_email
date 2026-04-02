@@ -30,8 +30,8 @@ The exit code reflects the test result.
 
 | Project | Directory | What it tests |
 |---------|-----------|---------------|
-| `api` | `tests/api/` | Worker API endpoints — health check, address CRUD, send mail via SMTP |
-| `browser` | `tests/browser/` | Frontend UI — login, inbox view, reply with HTML, XSS sanitization |
+| `api` | `tests/api/` | Worker API endpoints — wildcard health check, concrete address lifecycle, receive-only behavior |
+| `browser` | `tests/browser/` | Frontend UI — login, inbox view, wildcard receive-only behavior |
 
 ## Services
 
@@ -53,5 +53,8 @@ Test results and HTML reports are exported via volumes:
 The E2E worker uses `fixtures/wrangler.toml.e2e` with:
 - `E2E_TEST_MODE = true` — enables test seed endpoint
 - `DISABLE_ADMIN_PASSWORD_CHECK = true` — allows unauthenticated admin calls
-- `DEFAULT_SEND_BALANCE = 10` — allows sending without admin approval
+- `DOMAINS` / `DEFAULT_DOMAINS` configured as Cloudflare wildcard rules (for example `*.test.example.com`)
 - SMTP pointed at Mailpit container (`mailpit:1025`)
+
+> [!NOTE]
+> In wildcard mode, dynamically created addresses are receive-only. Send-specific SMTP E2E suites are intentionally skipped unless you add a separate non-wildcard sending address flow.

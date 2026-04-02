@@ -4,7 +4,8 @@ import WebSocket from 'ws';
 export const WORKER_URL = process.env.WORKER_URL!;
 export const FRONTEND_URL = process.env.FRONTEND_URL!;
 export const MAILPIT_API = process.env.MAILPIT_API!;
-export const TEST_DOMAIN = 'test.example.com';
+export const TEST_WILDCARD_RULE = '*.test.example.com';
+export const TEST_DOMAIN_SUFFIX = 'test.example.com';
 
 /**
  * Create a new email address via the worker API.
@@ -15,7 +16,7 @@ export const TEST_DOMAIN = 'test.example.com';
 export async function createTestAddress(
   ctx: APIRequestContext,
   name: string,
-  domain: string = TEST_DOMAIN
+  domain: string = TEST_WILDCARD_RULE
 ): Promise<{ jwt: string; address: string; address_id: number }> {
   const uniqueName = `${name}${Date.now()}`;
   const res = await ctx.post(`${WORKER_URL}/api/new_address`, {
@@ -37,7 +38,7 @@ export async function seedTestMail(
   address: string,
   opts: { subject?: string; html?: string; text?: string; from?: string }
 ): Promise<void> {
-  const from = opts.from || `sender@${TEST_DOMAIN}`;
+  const from = opts.from || `sender@${TEST_DOMAIN_SUFFIX}`;
   const subject = opts.subject || 'Test Email';
   const boundary = `----E2E${Date.now()}`;
   const htmlPart = opts.html || `<p>${opts.text || 'Hello from E2E'}</p>`;

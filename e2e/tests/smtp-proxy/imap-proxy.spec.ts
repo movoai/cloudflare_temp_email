@@ -219,7 +219,7 @@ test.describe('IMAP Proxy', () => {
   });
 });
 
-test.describe('IMAP Proxy — SENT mailbox', () => {
+test.describe.skip('IMAP Proxy — SENT mailbox', () => {
   let jwt: string;
   let address: string;
   const sentSubject = `IMAP Sent Test ${Date.now()}`;

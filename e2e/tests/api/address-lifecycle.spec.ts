@@ -1,24 +1,21 @@
 import { test, expect } from '@playwright/test';
-import { WORKER_URL, TEST_DOMAIN, createTestAddress, deleteAddress, requestSendAccess } from '../../fixtures/test-helpers';
+import { TEST_DOMAIN_SUFFIX, WORKER_URL, createTestAddress, deleteAddress } from '../../fixtures/test-helpers';
 
 test.describe('Address Lifecycle', () => {
-  test('create address, request send access, fetch settings, then delete', async ({ request }) => {
+  test('create concrete wildcard address, fetch receive-only settings, then delete', async ({ request }) => {
     // Create address
     const { jwt, address, address_id } = await createTestAddress(request, 'lifecycle-test');
-    expect(address).toContain('@' + TEST_DOMAIN);
+    expect(address).toMatch(new RegExp(`@[^.]+\\.${TEST_DOMAIN_SUFFIX.replaceAll('.', '\\.')}$`));
     expect(jwt).toBeTruthy();
     expect(address_id).toBeGreaterThan(0);
 
-    // Request send access (creates address_sender row with DEFAULT_SEND_BALANCE)
-    await requestSendAccess(request, jwt);
-
-    // Fetch address settings — balance should match DEFAULT_SEND_BALANCE=10
+    // Fetch address settings — wildcard-created addresses stay receive-only
     const settingsRes = await request.get(`${WORKER_URL}/api/settings`, {
       headers: { Authorization: `Bearer ${jwt}` },
     });
     expect(settingsRes.ok()).toBe(true);
     const settings = await settingsRes.json();
-    expect(settings.send_balance).toBe(10);
+    expect(settings.send_balance).toBe(0);
 
     // Delete address
     await deleteAddress(request, jwt);

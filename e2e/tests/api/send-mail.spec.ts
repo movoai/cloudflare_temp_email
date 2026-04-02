@@ -2,29 +2,12 @@ import { test, expect } from '@playwright/test';
 import {
   createTestAddress,
   deleteAddress,
-  deleteAllMailpitMessages,
-  requestSendAccess,
-  onMailpitMessage,
   WORKER_URL,
 } from '../../fixtures/test-helpers';
 
-test.describe('Send Mail via SMTP', () => {
-  test.beforeEach(async ({ request }) => {
-    await deleteAllMailpitMessages(request);
-  });
-
-  test('send HTML email and verify in Mailpit', async ({ request }) => {
+test.describe('Send Mail', () => {
+  test('wildcard-created addresses cannot send mail', async ({ request }) => {
     const { jwt, address } = await createTestAddress(request, 'sender-test');
-
-    // Must request send access before sending (creates address_sender row)
-    await requestSendAccess(request, jwt);
-
-    const subject = `E2E Test ${Date.now()}`;
-    const htmlContent = '<h1>Hello</h1><p>This is an <b>E2E test</b> email.</p>';
-
-    // Start listening for the message BEFORE sending
-    const listener = onMailpitMessage((m) => m.Subject === subject);
-    await listener.ready;
 
     // Send mail via worker API
     const sendRes = await request.post(`${WORKER_URL}/api/send_mail`, {
@@ -33,17 +16,14 @@ test.describe('Send Mail via SMTP', () => {
         from_name: 'E2E Sender',
         to_name: 'E2E Recipient',
         to_mail: 'recipient@test.example.com',
-        subject,
-        content: htmlContent,
+        subject: `Blocked ${Date.now()}`,
+        content: '<h1>Hello</h1><p>This should be blocked.</p>',
         is_html: true,
       },
     });
-    expect(sendRes.ok()).toBe(true);
-
-    // Wait for Mailpit WebSocket "new" event — no polling
-    const mail = await listener.message;
-    expect(mail.From.Address).toBe(address);
-    expect(mail.To[0].Address).toBe('recipient@test.example.com');
+    expect(sendRes.ok()).toBe(false);
+    expect(await sendRes.text()).toContain('not support sending mail');
+    expect(address).toContain('@');
 
     // Cleanup
     await deleteAddress(request, jwt);

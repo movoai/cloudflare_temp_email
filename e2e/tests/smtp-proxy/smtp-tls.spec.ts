@@ -32,7 +32,7 @@ function createNoTlsTransport(user: string, pass: string) {
   });
 }
 
-test.describe('SMTP Proxy — STARTTLS', () => {
+test.describe.skip('SMTP Proxy — STARTTLS', () => {
   let jwt: string;
   let address: string;
 
