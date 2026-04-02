@@ -16,6 +16,9 @@ This page describes **Address JWT**, which is different from **User JWT**:
 
 ## Create Email Address via Admin API
 
+> [!TIP]
+> In Cloudflare wildcard mode, the `domain` parameter is a wildcard root rule such as `*.example.com`. The returned `address` is the real **concrete subdomain address**, and it stays active for **90 days** by default.
+
 This is a `python` example using the `requests` library to send emails.
 
 ```python
@@ -26,7 +29,7 @@ res = requests.post(
         # Enable prefix (True/False)
         "enablePrefix": True,
         "name": "<email_name>",
-        "domain": "<email_domain>",
+        "domain": "*.example.com",
     },
     headers={
         'x-admin-auth': "<your_website_admin_password>",
@@ -35,7 +38,7 @@ res = requests.post(
     }
 )
 
-# Returns {"jwt": "<Jwt>"}
+# Example response: {"address": "tmpdemo@silverharbor.example.com", "jwt": "<Jwt>", "address_id": 1}
 print(res.json())
 ```
 
@@ -70,7 +73,7 @@ def fetch_email_data(name):
             json={
                 "enablePrefix": True,
                 "name": name,
-                "domain": "<email_domain>",
+                "domain": "*.example.com",
             },
             headers={
                 'x-admin-auth': "<your_website_admin_password>",

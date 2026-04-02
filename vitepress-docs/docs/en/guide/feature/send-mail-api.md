@@ -1,5 +1,8 @@
 # Send Email API
 
+> [!WARNING]
+> In Cloudflare wildcard mode, **dynamically created wildcard addresses are receive-only**. If the address comes from a rule such as `*.example.com`, `/api/send_mail`, `/external/api/send_mail`, and SMTP proxy sending are expected to reject it.
+
 ## Send Email via HTTP API
 
 This is a `python` example using the `requests` library to send emails.
@@ -43,6 +46,9 @@ res = requests.post(
 ```
 
 ## Send Email via SMTP
+
+> [!TIP]
+> The examples on this page only apply to separately configured sending addresses, not to dynamically generated wildcard addresses.
 
 Please first refer to [Configure SMTP Proxy](/en/guide/feature/config-smtp-proxy.html).
 

@@ -10,6 +10,7 @@
 
 ### Features
 
+- feat: |Cloudflare Wildcard| Add integrated Cloudflare wildcard settings with multi-root wildcard support, quick admin activation, and concrete subdomain addresses returned on creation
 - feat: |Admin API| `/admin/new_address` endpoint now returns `address_id` field, avoiding additional query after address creation (#912)
 - feat: |Auto Reply| Add regex matching support for sender filter using `/pattern/` syntax (e.g. `/@example\.com$/`), backward compatible with prefix matching
 - feat: |Turnstile| Add global Turnstile CAPTCHA for all login forms via `ENABLE_GLOBAL_TURNSTILE_CHECK` env var (#767)
@@ -17,16 +18,19 @@
 
 ### Bug Fixes
 
+- fix: |Cloudflare Wildcard| Add 90-day address expiry checks, reject unknown/expired concrete wildcard recipients, and block send-access/send-mail for wildcard-created addresses
 - fix: |Auto Reply| Fix auto-reply not triggering when `source_prefix` is empty string (#459), empty value now correctly matches all senders
 - fix: |OAuth2| Fix OAuth2 login callback failure on Android via browser and other mobile browsers due to sessionStorage loss during redirect, add localStorage fallback (#900)
 - fix: |IMAP| Fix nested reply email mojibake, Gmail empty Content-Type header parsing failure, missing Date header, and locale-dependent date formatting issues
 
 ### Testing
 
+- test: |E2E| Update wildcard-mode fixtures to cover concrete subdomain creation, receive-only defaults, and disabled send entry points
 - test: |E2E| Add auto-reply trigger E2E tests covering empty prefix, prefix matching, regex matching, and disabled state
 
 ### Docs
 
+- docs: |Cloudflare Wildcard| Add README and VitePress documentation for multi-domain wildcard mode, admin configuration, 90-day retention, and receive-only behavior
 - docs: |API| Add clarification between Address JWT and User JWT to avoid confusion; reorganize documentation menu structure with dedicated API Endpoints section (#910)
 - docs: |Telegram| Add per-user mail push and global push documentation (#769)
 - docs: |Webhook| Add webhook template examples for Telegram Bot, WeChat Work, Discord and other common push platforms

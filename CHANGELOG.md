@@ -10,6 +10,7 @@
 
 ### Features
 
+- feat: |Cloudflare Wildcard| 新增 Cloudflare 泛域名一体化配置，支持多主域名泛解析、后台快速切换启用域名，并在创建地址时返回具体子域名地址
 - feat: |Admin API| `/admin/new_address` 接口返回值新增 `address_id` 字段，避免创建后需再次查询地址 ID（#912）
 - feat: |自动回复| 发件人过滤支持正则表达式匹配，使用 `/pattern/` 语法（如 `/@example\.com$/`），同时保持前缀匹配的向后兼容
 - feat: |Turnstile| 新增全局登录表单 Turnstile 人机验证，通过 `ENABLE_GLOBAL_TURNSTILE_CHECK` 环境变量控制（#767）
@@ -17,16 +18,19 @@
 
 ### Bug Fixes
 
+- fix: |Cloudflare Wildcard| 新增 90 天地址有效期与过期校验，拒绝未知/过期具体子域地址收件，并阻止泛解析地址申请发信或执行发信
 - fix: |自动回复| 修复 `source_prefix` 为空字符串时自动回复不触发的问题（#459），空值现在正确匹配所有发件人
 - fix: |OAuth2| 修复 Android via 浏览器等移动端 OAuth2 登录时 sessionStorage 丢失导致回调失败的问题，新增 localStorage 兜底（#900）
 - fix: |IMAP| 修复嵌套回复邮件乱码、Gmail 空 Content-Type 头解析失败、缺失 Date 头及 locale 依赖日期格式等问题
 
 ### Testing
 
+- test: |E2E| 更新 wildcard 模式测试夹具，覆盖具体子域地址创建、仅收信默认行为与发送入口禁用
 - test: |E2E| 新增自动回复触发 E2E 测试，覆盖空前缀、前缀匹配、正则匹配和禁用状态场景
 
 ### Docs
 
+- docs: |Cloudflare Wildcard| 补充多主域名泛解析、管理端配置入口、90 天有效期与仅收信限制的 README / VitePress 文档
 - docs: |API| 新增地址 JWT 与用户 JWT 的区分说明，避免混淆两种认证方式；调整文档菜单结构，将 API 接口文档归类到独立分组（#910）
 - docs: |Telegram| 新增每用户邮件推送和全局推送功能说明文档（#769）
 - docs: |Webhook| 新增 Telegram Bot、企业微信、Discord 等常用推送平台的 Webhook 模板示例

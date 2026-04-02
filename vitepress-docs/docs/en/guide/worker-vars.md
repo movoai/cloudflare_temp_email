@@ -7,7 +7,7 @@
 
 | Variable Name              | Type        | Description                                                            | Example                              |
 | -------------------------- | ----------- | ---------------------------------------------------------------------- | ------------------------------------ |
-| `DOMAINS`                  | JSON        | All domains for temporary email, supports multiple domains             | `["awsl.uk", "dreamhunter2333.xyz"]` |
+| `DOMAINS`                  | JSON        | Cloudflare wildcard root-domain rules, configured with `*.` and supporting multiple roots | `["*.mail.example.com", "*.mail.example.net"]` |
 | `JWT_SECRET`               | Text/Secret | Secret key for generating JWT, used for login and authentication       | `xxx`                                |
 | `ADMIN_PASSWORDS`          | JSON        | Admin console passwords, console access disabled if not configured     | `["123", "456"]`                     |
 | `ENABLE_USER_CREATE_EMAIL` | Text/JSON   | Whether to allow users to create mailboxes, disabled if not configured | `true`                               |
@@ -30,12 +30,21 @@
 | `DISABLE_CUSTOM_ADDRESS_NAME`         | Text/JSON | Disable custom email address names, if set to true, users cannot enter custom names and they will be auto-generated                                                                                               | `true`                                    |
 | `ADDRESS_CHECK_REGEX`                 | Text      | Regular expression for `email address` name, used for validation only                                                                                                                                             | `^(?!.*admin).*`                          |
 | `ADDRESS_REGEX`                       | Text      | Regular expression to replace illegal symbols in `email address` name, symbols not in the regex will be replaced. Default is `[^a-z0-9]` if not set. Use with caution as some symbols may prevent email reception | `[^a-z0-9]`                               |
-| `DEFAULT_DOMAINS`                     | JSON      | Default domains available to users (not logged in or users without assigned roles)                                                                                                                                | `["awsl.uk", "dreamhunter2333.xyz"]`      |
+| `DEFAULT_DOMAINS`                     | JSON      | Default active Cloudflare wildcard rules available to users (anonymous or without role overrides)                                                                                                                  | `["*.mail.example.com", "*.mail.example.net"]` |
 | `CREATE_ADDRESS_DEFAULT_DOMAIN_FIRST` | Text/JSON | Whether to prioritize default domain when creating new addresses, if set to true, will use the first domain when no domain is specified, mainly for telegram bot scenarios                                        | `false`                                   |
-| `DOMAIN_LABELS`                       | JSON      | For Chinese domains, you can use DOMAIN_LABELS to display Chinese names                                                                                                                                           | `["中文.awsl.uk", "dreamhunter2333.xyz"]` |
+| `DOMAIN_LABELS`                       | JSON      | Frontend labels. In wildcard mode you usually display the raw `*.root-domain` rule or a custom description                                                                                                       | `["Primary *.mail.example.com", "Backup *.mail.example.net"]` |
 | `ENABLE_AUTO_REPLY`                   | Text/JSON | Allow automatic email replies. Sender filter (`source_prefix`) supports three modes: empty to match all senders, prefix for `startsWith` matching, or `/regex/` syntax for regex matching (e.g. `/@example\.com$/`) | `true`                                    |
 | `DEFAULT_SEND_BALANCE`                | Text/JSON | Default email sending balance, will be 0 if not set                                                                                                                                                               | `1`                                       |
 | `ENABLE_ADDRESS_PASSWORD`             | Text/JSON | Enable address password feature, when enabled, passwords will be auto-generated for new addresses, supports password login and modification                                                                       | `true`                                    |
+
+> [!TIP]
+> In Cloudflare wildcard mode, `DOMAINS` / `DEFAULT_DOMAINS` act as the **bootstrap config** only. After deployment, manage the live settings in **Worker Config → Cloudflare Wildcard Domains**:
+>
+> - Full wildcard pool
+> - Active wildcard subset
+> - Fixed 90-day retention
+>
+> The frontend dropdown shows rules such as `*.example.com`, but the created mailbox is a concrete subdomain address such as `tmp@silverharbor.example.com`.
 
 ## Email Reception Related Variables
 
@@ -85,9 +94,9 @@
 > - If `domains` is empty, `DEFAULT_DOMAINS` will be used
 > - If prefix is null, the default prefix will be used, if prefix is an empty string, no prefix will be used
 >
-> When deploying through UI, configure `USER_ROLES` in this format: `[{"domains":["awsl.uk","dreamhunter2333.xyz"],"role":"vip","prefix":"vip"},{"domains":["awsl.uk","dreamhunter2333.xyz"],"role":"admin","prefix":""}]`
+> When deploying through UI, configure `USER_ROLES` in this format: `[{"domains":["*.mail.example.com","*.mail.example.net"],"role":"vip","prefix":"vip"},{"domains":["*.mail.example.com"],"role":"admin","prefix":""}]`
 >
-> When deploying via CLI, refer to `worker/wrangler.toml.template` and configure `USER_ROLES` in this format: `[{ domains = ["awsl.uk", "dreamhunter2333.xyz"], role = "vip", prefix = "vip" }, { domains = ["awsl.uk", "dreamhunter2333.xyz"], role = "admin", prefix = "" }]`
+> When deploying via CLI, refer to `worker/wrangler.toml.template` and configure `USER_ROLES` in this format: `[{ domains = ["*.mail.example.com", "*.mail.example.net"], role = "vip", prefix = "vip" }, { domains = ["*.mail.example.com"], role = "admin", prefix = "" }]`
 
 ## Web Related Variables
 

@@ -16,6 +16,9 @@
 
 ## 通过 admin API 新建邮箱地址
 
+> [!TIP]
+> Cloudflare 泛解析模式下，`domain` 参数传入的是 `*.example.com` 这类 **根规则**，接口返回值中的 `address` 则是实际可收件的 **具体子域地址**，并默认拥有 **90 天** 有效期。
+
 这是一个 `python` 的例子，使用 `requests` 库发送邮件。
 
 ```python
@@ -26,7 +29,7 @@ res = requests.post(
         # 是否启用前缀 (True/False)
         "enablePrefix": True,
         "name": "<邮箱名称>",
-        "domain": "<邮箱域名>",
+        "domain": "*.example.com",
     },
     headers={
         'x-admin-auth': "<你的网站admin密码>",
@@ -35,7 +38,7 @@ res = requests.post(
     }
 )
 
-# 返回值 {"jwt": "<Jwt>"}
+# 返回值示例 {"address": "tmpdemo@silverharbor.example.com", "jwt": "<Jwt>", "address_id": 1}
 print(res.json())
 ```
 
@@ -70,7 +73,7 @@ def fetch_email_data(name):
             json={
                 "enablePrefix": True,
                 "name": name,
-                "domain": "<邮箱域名>",
+                "domain": "*.example.com",
             },
             headers={
                 'x-admin-auth': "<你的网站admin密码>",

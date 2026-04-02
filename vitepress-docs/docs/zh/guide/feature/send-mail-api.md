@@ -1,5 +1,8 @@
 # 发送邮件 API
 
+> [!WARNING]
+> 在 Cloudflare 泛解析模式下，**动态创建的 wildcard 地址仅支持收信**。如果接口返回的地址来自 `*.example.com` 规则展开后的具体子域地址，则 `/api/send_mail`、`/external/api/send_mail` 以及 SMTP 代理发信都会被拒绝。
+
 ## 通过 HTTP API 发送邮件
 
 这是一个 `python` 的例子，使用 `requests` 库发送邮件。
@@ -43,6 +46,9 @@ res = requests.post(
 ```
 
 ## 通过 SMTP 发送邮件
+
+> [!TIP]
+> 只有你单独配置的可发信地址才适用于本页示例；通过泛解析动态创建的地址不适用。
 
 请先参考 [配置 SMTP 代理](/zh/guide/feature/config-smtp-proxy.html)。
 
