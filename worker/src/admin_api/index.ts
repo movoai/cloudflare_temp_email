@@ -16,6 +16,7 @@ import { sendMailbyAdmin } from './send_mail'
 import db_api from './db_api'
 import ip_blacklist_settings from './ip_blacklist_settings'
 import ai_extract_settings from './ai_extract_settings'
+import cloudflare_wildcard_settings from './cloudflare_wildcard_settings'
 import { EmailRuleSettings } from '../models'
 import e2e_test_api from './e2e_test_api'
 
@@ -370,6 +371,10 @@ api.post("/admin/webhook/settings", webhook_settings.saveWebhookSettings);
 api.get("/admin/mail_webhook/settings", mail_webhook_settings.getWebhookSettings);
 api.post("/admin/mail_webhook/settings", mail_webhook_settings.saveWebhookSettings);
 api.post("/admin/mail_webhook/test", mail_webhook_settings.testWebhookSettings);
+
+// cloudflare wildcard settings
+api.get('/admin/cloudflare_wildcard_settings', cloudflare_wildcard_settings.get);
+api.post('/admin/cloudflare_wildcard_settings', cloudflare_wildcard_settings.save);
 
 // worker config
 api.get("/admin/worker/configs", worker_config.getConfig);

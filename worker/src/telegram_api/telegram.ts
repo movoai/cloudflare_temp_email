@@ -4,7 +4,7 @@ import { Telegraf, Context as TgContext, Markup } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
 
 import { CONSTANTS } from "../constants";
-import { getBooleanValue, getDomains, getJsonObjectValue, getStringValue } from '../utils';
+import { getBooleanValue, getJsonObjectValue, getStringValue } from '../utils';
 import { TelegramSettings } from "./settings";
 import { sendTelegramAttachments } from "./tg_file_upload";
 import { bindTelegramAddress, deleteTelegramAddress, jwtListToAddressData, tgUserNewAddress, unbindTelegramAddress, unbindTelegramByAddress } from "./common";
@@ -116,7 +116,8 @@ export function newTelegramBot(c: Context<HonoCustomType>, token: string): Teleg
     bot.command("start", async (ctx: TgContext) => {
         const msgs = await getTgMessages(c, ctx);
         const prefix = getStringValue(c.env.PREFIX)
-        const domains = getDomains(c);
+        const wildcardConfig = await getCloudflareWildcardConfig(c);
+        const domains = wildcardConfig.activeWildcardDomains;
         const commands = getTelegramCommands(c);
         return await ctx.reply(
             `${msgs.TgWelcomeMsg}\n\n`

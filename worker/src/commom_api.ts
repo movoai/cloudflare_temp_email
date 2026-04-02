@@ -3,7 +3,7 @@ import { Hono } from 'hono'
 import utils from './utils';
 import { CONSTANTS } from './constants';
 import { isS3Enabled } from './mails_api/s3_attachment';
-import { isAnySendMailEnabled } from './common';
+import { getCloudflareWildcardConfig, mapWildcardRulesToOpenSettings } from './cloudflare_wildcard';
 
 const api = new Hono<HonoCustomType>
 
@@ -16,6 +16,9 @@ api.get('/open_api/settings', async (c) => {
         needAuth = !auth || !passwords.includes(auth);
     }
 
+    const wildcardConfig = await getCloudflareWildcardConfig(c);
+    const compatibility = mapWildcardRulesToOpenSettings(wildcardConfig.activeWildcardDomains);
+
     return c.json({
         "title": c.env.TITLE,
         "announcement": utils.getStringValue(c.env.ANNOUNCEMENT),
@@ -24,9 +27,9 @@ api.get('/open_api/settings', async (c) => {
         "addressRegex": utils.getStringValue(c.env.ADDRESS_REGEX),
         "minAddressLen": utils.getIntValue(c.env.MIN_ADDRESS_LEN, 1),
         "maxAddressLen": utils.getIntValue(c.env.MAX_ADDRESS_LEN, 30),
-        "defaultDomains": utils.getDefaultDomains(c),
-        "domains": utils.getDomains(c),
-        "domainLabels": utils.getStringArray(c.env.DOMAIN_LABELS),
+        "defaultDomains": compatibility.defaultDomains,
+        "domains": compatibility.domains,
+        "domainLabels": compatibility.domainLabels,
         "needAuth": needAuth,
         "adminContact": c.env.ADMIN_CONTACT,
         "enableUserCreateEmail": utils.getBooleanValue(c.env.ENABLE_USER_CREATE_EMAIL),
@@ -39,13 +42,16 @@ api.get('/open_api/settings', async (c) => {
         "cfTurnstileSiteKey": c.env.CF_TURNSTILE_SITE_KEY,
         "enableWebhook": utils.getBooleanValue(c.env.ENABLE_WEBHOOK),
         "isS3Enabled": isS3Enabled(c),
-        "enableSendMail": isAnySendMailEnabled(c),
+        "enableSendMail": false,
         "version": CONSTANTS.VERSION,
         "showGithub": !utils.getBooleanValue(c.env.DISABLE_SHOW_GITHUB),
         "disableAdminPasswordCheck": utils.getBooleanValue(c.env.DISABLE_ADMIN_PASSWORD_CHECK),
         "enableAddressPassword": utils.getBooleanValue(c.env.ENABLE_ADDRESS_PASSWORD),
         "statusUrl": utils.getStringValue(c.env.STATUS_URL),
-        "enableGlobalTurnstileCheck": utils.isGlobalTurnstileEnabled(c)
+        "enableGlobalTurnstileCheck": utils.isGlobalTurnstileEnabled(c),
+        "cloudflareWildcardDomains": wildcardConfig.wildcardDomains,
+        "activeCloudflareWildcardDomains": wildcardConfig.activeWildcardDomains,
+        "cloudflareAddressRetentionDays": wildcardConfig.retentionDays
     });
 })
 

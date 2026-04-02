@@ -3,9 +3,11 @@ import { Context } from 'hono';
 import utils from '../utils';
 import { CONSTANTS } from '../constants';
 import { isS3Enabled } from '../mails_api/s3_attachment';
+import { getCloudflareWildcardConfig } from '../cloudflare_wildcard';
 
 export default {
     getConfig: async (c: Context<HonoCustomType>) => {
+        const wildcardConfig = await getCloudflareWildcardConfig(c);
         return c.json({
             "DEFAULT_LANG": c.env.DEFAULT_LANG,
             "TITLE": c.env.TITLE,
@@ -22,9 +24,9 @@ export default {
 
             "FORWARD_ADDRESS_LIST": utils.getStringArray(c.env.FORWARD_ADDRESS_LIST),
             "SUBDOMAIN_FORWARD_ADDRESS_LIST": utils.getJsonObjectValue<SubdomainForwardAddressList[]>(c.env.SUBDOMAIN_FORWARD_ADDRESS_LIST),
-            "DEFAULT_DOMAINS": utils.getDefaultDomains(c),
-            "DOMAINS": utils.getDomains(c),
-            "DOMAIN_LABELS": utils.getStringArray(c.env.DOMAIN_LABELS),
+            "DEFAULT_DOMAINS": wildcardConfig.activeWildcardDomains,
+            "DOMAINS": wildcardConfig.activeWildcardDomains,
+            "DOMAIN_LABELS": wildcardConfig.activeWildcardDomains,
 
             "HAS_JWT_SECRET": !!utils.getStringValue(c.env.JWT_SECRET),
 
@@ -53,6 +55,9 @@ export default {
 
             "ENABLE_ANOTHER_WORKER": utils.getBooleanValue(c.env.ENABLE_ANOTHER_WORKER),
             "ANOTHER_WORKER_LIST": utils.getAnotherWorkerList(c),
+            "CLOUDFLARE_WILDCARD_DOMAINS": wildcardConfig.wildcardDomains,
+            "CLOUDFLARE_ACTIVE_WILDCARD_DOMAINS": wildcardConfig.activeWildcardDomains,
+            "CLOUDFLARE_ADDRESS_RETENTION_DAYS": wildcardConfig.retentionDays,
         })
     }
 }

@@ -174,6 +174,12 @@ export type EmailRuleSettings = {
     emailForwardingList: SubdomainForwardAddressList[]
 }
 
+export type CloudflareWildcardSettings = {
+    wildcardDomains: string[];
+    activeWildcardDomains: string[];
+    retentionDays: number;
+}
+
 export type RoleConfig = {
     maxAddressCount?: number;
     // future configs can be added here

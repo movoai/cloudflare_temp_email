@@ -2,9 +2,10 @@ import { Context } from 'hono';
 import { Jwt } from 'hono/utils/jwt'
 import { WorkerMailerOptions } from 'worker-mailer';
 
-import { getBooleanValue, getDomains, getStringValue, getIntValue, getUserRoles, getDefaultDomains, getJsonSetting, getAnotherWorkerList, hashPassword, getJsonObjectValue } from './utils';
+import { getBooleanValue, getDomains, getStringValue, getIntValue, getUserRoles, getJsonSetting, getAnotherWorkerList, hashPassword, getJsonObjectValue } from './utils';
 import { unbindTelegramByAddress } from './telegram_api/common';
 import { CONSTANTS } from './constants';
+import { computeExpiresAtSql, createUniqueConcreteDomain, getCloudflareWildcardConfig, makeRandomWildcardLabel, normalizeWildcardRule, pickActiveWildcardRule } from './cloudflare_wildcard';
 import { AdminWebhookSettings, WebhookMail, WebhookSettings } from './models';
 import i18n from './i18n';
 
@@ -200,68 +201,64 @@ export const newAddress = async (
     } else if (enablePrefix) {
         name = getStringValue(c.env.PREFIX).trim() + name;
     }
-    // check domain
-    const allowDomains = checkAllowDomains ? await getAllowDomains(c) : getDomains(c);
-    // if domain is not set, select domain based on environment configuration
-    if (!domain && allowDomains.length > 0) {
-        const createAddressDefaultDomainFirst = getBooleanValue(c.env.CREATE_ADDRESS_DEFAULT_DOMAIN_FIRST);
-        if (createAddressDefaultDomainFirst) {
-            domain = allowDomains[0];
-        } else {
-            domain = allowDomains[Math.floor(Math.random() * allowDomains.length)];
-        }
-    }
-    // check domain is valid
-    if (!domain || !allowDomains.includes(domain)) {
-        throw new Error(msgs.InvalidDomainMsg)
-    }
-    // create address
-    name = name + "@" + domain;
+    const wildcardConfig = await getCloudflareWildcardConfig(c);
+    const allowDomains = checkAllowDomains
+        ? await getAllowDomains(c)
+        : wildcardConfig.activeWildcardDomains;
+    const createAddressDefaultDomainFirst = getBooleanValue(c.env.CREATE_ADDRESS_DEFAULT_DOMAIN_FIRST);
+    let selectedRule: string;
     try {
-        // Try insert with source_meta field first
+        selectedRule = pickActiveWildcardRule(allowDomains, domain, createAddressDefaultDomainFirst);
+    } catch (error) {
+        throw new Error(msgs.InvalidDomainMsg + `: ${(error as Error).message}`);
+    }
+    const concreteDomain = await createUniqueConcreteDomain({
+        rule: selectedRule,
+        makeLabel: () => makeRandomWildcardLabel(),
+        isAvailable: async (candidateDomain) => {
+            const existing = await c.env.DB.prepare(
+                `SELECT id FROM address WHERE substr(name, instr(name, '@') + 1) = ? LIMIT 1`
+            ).bind(candidateDomain).first('id');
+            return !existing;
+        },
+    });
+    const address = `${name}@${concreteDomain}`;
+    const expiresAt = computeExpiresAtSql(new Date(), wildcardConfig.retentionDays);
+    const storedSourceMeta = `wildcard:${selectedRule}|origin:${sourceMeta || 'unknown'}`;
+    try {
         const result = await c.env.DB.prepare(
-            `INSERT INTO address(name, source_meta) VALUES(?, ?)`
-        ).bind(name, sourceMeta).run();
+            `INSERT INTO address(name, source_meta, expires_at) VALUES(?, ?, ?)`
+        ).bind(address, storedSourceMeta, expiresAt).run();
         if (!result.success) {
             throw new Error(msgs.FailedCreateAddressMsg)
         }
-        await updateAddressUpdatedAt(c, name);
+        await updateAddressUpdatedAt(c, address);
     } catch (e) {
         const message = (e as Error).message;
-        // Fallback: source_meta field may not exist, try without it
-        if (message && message.includes("source_meta")) {
-            const result = await c.env.DB.prepare(
-                `INSERT INTO address(name) VALUES(?)`
-            ).bind(name).run();
-            if (!result.success) {
-                throw new Error(msgs.FailedCreateAddressMsg)
-            }
-            await updateAddressUpdatedAt(c, name);
-        } else if (message && message.includes("UNIQUE")) {
+        if (message && message.includes("UNIQUE")) {
             throw new Error(msgs.AddressAlreadyExistsMsg)
-        } else {
-            throw new Error(msgs.FailedCreateAddressMsg)
         }
+        throw new Error(msgs.FailedCreateAddressMsg)
     }
     const address_id = await c.env.DB.prepare(
         `SELECT id FROM address where name = ?`
-    ).bind(name).first<number>("id");
+    ).bind(address).first<number>("id");
 
     if (!address_id) {
         throw new Error(msgs.FailedCreateAddressMsg);
     }
 
     // 如果启用地址密码功能，自动生成密码
-    const generatedPassword = await generatePasswordForAddress(c, name);
+    const generatedPassword = await generatePasswordForAddress(c, address);
 
     // create jwt
     const jwt = await Jwt.sign({
-        address: name,
+        address,
         address_id: address_id
     }, c.env.JWT_SECRET, "HS256")
     return {
         jwt: jwt,
-        address: name,
+        address,
         password: generatedPassword,
         address_id: address_id,
     }
@@ -544,12 +541,16 @@ export const getAddressPrefix = async (c: Context<HonoCustomType>): Promise<stri
 }
 
 export const getAllowDomains = async (c: Context<HonoCustomType>): Promise<string[]> => {
+    const wildcardConfig = await getCloudflareWildcardConfig(c);
+    const activeRules = wildcardConfig.activeWildcardDomains;
     const user = c.get("userPayload");
     if (!user) {
-        return getDefaultDomains(c);
+        return activeRules;
     }
     const user_role = await commonGetUserRole(c, user.user_id);
-    return user_role?.domains || getDefaultDomains(c);;
+    const roleDomains = (user_role?.domains || activeRules).map((rule) => normalizeWildcardRule(rule));
+    const allowedRules = roleDomains.filter((rule) => activeRules.includes(rule));
+    return allowedRules.length > 0 ? allowedRules : activeRules;
 }
 
 export async function sendWebhook(

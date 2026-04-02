@@ -14,8 +14,9 @@ import { api as telegramApi } from './telegram_api'
 import i18n from './i18n';
 import { email } from './email';
 import { scheduled } from './scheduled';
-import { getPasswords, getBooleanValue, getStringArray, checkIsAdmin } from './utils';
+import { getPasswords, getBooleanValue, checkIsAdmin } from './utils';
 import { checkAccessControl } from './ip_blacklist';
+import { getCloudflareWildcardConfig } from './cloudflare_wildcard';
 
 const API_PATHS = [
 	"/api/",
@@ -270,7 +271,8 @@ const health_check = async (c: Context<HonoCustomType>) => {
 	if (!c.env.JWT_SECRET) {
 		return c.text(msgs.JWTSecretNotSetMsg, 400);
 	}
-	if (getStringArray(c.env.DOMAINS).length === 0) {
+	const wildcardConfig = await getCloudflareWildcardConfig(c);
+	if (wildcardConfig.activeWildcardDomains.length === 0) {
 		return c.text(msgs.DomainsNotSetMsg, 400);
 	}
 	return c.text("OK");
