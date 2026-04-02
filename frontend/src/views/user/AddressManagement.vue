@@ -7,10 +7,11 @@ import { NBadge, NPopconfirm, NButton } from 'naive-ui'
 import { useGlobalState } from '../../store'
 import { api } from '../../api'
 import { getRouterPathWithLang } from '../../utils'
+import { formatAddressWithDomainHint } from '../../utils/wildcard-domain'
 
 import Login from '../common/Login.vue';
 
-const { jwt } = useGlobalState()
+const { jwt, openSettings } = useGlobalState()
 const message = useMessage()
 const router = useRouter()
 
@@ -120,7 +121,10 @@ const fetchData = async () => {
         const { results } = await api.fetch(
             `/user_api/bind_address`
         );
-        data.value = results;
+        data.value = (results || []).map((row) => ({
+            ...row,
+            display_name: formatAddressWithDomainHint(row.name, openSettings.value.domains),
+        }));
     } catch (error) {
         console.log(error)
         message.error(error.message || "error");
@@ -130,7 +134,7 @@ const fetchData = async () => {
 const columns = [
     {
         title: t('name'),
-        key: "name"
+        key: "display_name"
     },
     {
         title: t('mail_count'),

@@ -86,11 +86,10 @@ const send = async () => {
             contentType: 'text',
             content: "",
         }
-    } catch (error) {
-        message.error(error.message || "error");
-    } finally {
         message.success(t("successSend"));
         indexTab.value = 'sendbox'
+    } catch (error) {
+        message.error(error.message || "error");
     }
 }
 

@@ -127,7 +127,8 @@ const { locale, t } = useI18n({
             getNewEmail: 'Create New Email',
             getNewEmailTip1: 'Please input the email you want to use. only allow: ',
             getNewEmailTip2: 'Levaing it blank will generate a random email address.',
-            getNewEmailTip3: 'You can choose a domain from the dropdown list.',
+            getNewEmailTip3: 'Choose a wildcard root domain from the dropdown list. The system will create a concrete subdomain address for you.',
+            getNewEmailTip4: 'Wildcard-created addresses are receive-only and can keep receiving new mail for 90 days.',
             credential: 'Email Address Credential',
             ok: 'OK',
             generateName: 'Generate Fake Name',
@@ -149,7 +150,8 @@ const { locale, t } = useI18n({
             getNewEmail: '创建新邮箱',
             getNewEmailTip1: '请输入你想要使用的邮箱地址, 只允许: ',
             getNewEmailTip2: '留空将会生成一个随机的邮箱地址。',
-            getNewEmailTip3: '你可以从下拉列表中选择一个域名。',
+            getNewEmailTip3: '请从下拉框中选择一个泛域名根规则，系统会为你生成具体的子域名地址。',
+            getNewEmailTip4: '通过泛解析创建的地址仅支持收信，并可在 90 天内继续接收新邮件。',
             credential: '邮箱地址凭据',
             ok: '确定',
             generateName: '生成随机名字',
@@ -335,6 +337,9 @@ onMounted(async () => {
                             <p v-if="!openSettings.disableCustomAddressName">{{ t("getNewEmailTip2") }}</p>
                             <p>{{ t("getNewEmailTip3") }}</p>
                         </span>
+                        <n-alert type="info" :show-icon="false" :bordered="false">
+                            {{ t("getNewEmailTip4") }}
+                        </n-alert>
                         <n-button v-if="!openSettings.disableCustomAddressName" @click="generateName"
                             style="margin-bottom: 10px;">
                             {{ t('generateName') }}

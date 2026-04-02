@@ -40,6 +40,12 @@ export const useGlobalState = createGlobalState(
             enableAddressPassword: false,
             statusUrl: '',
             enableGlobalTurnstileCheck: false,
+            /** @type {string[]} */
+            cloudflareWildcardDomains: [],
+            /** @type {string[]} */
+            activeCloudflareWildcardDomains: [],
+            /** @type {number} */
+            cloudflareAddressRetentionDays: 90,
         })
         const settings = ref({
             fetched: false,

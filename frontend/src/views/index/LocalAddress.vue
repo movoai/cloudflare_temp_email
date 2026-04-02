@@ -8,8 +8,9 @@ import { NPopconfirm, NButton } from 'naive-ui'
 import { useGlobalState } from '../../store'
 // @ts-ignore
 import Login from '../common/Login.vue';
+import { formatAddressWithDomainHint } from '../../utils/wildcard-domain';
 
-const { jwt } = useGlobalState()
+const { jwt, openSettings } = useGlobalState()
 // @ts-ignore
 const message = useMessage()
 
@@ -57,7 +58,7 @@ const data = computed(() => {
             );
             return {
                 valid: true,
-                address: payload.address,
+                address: formatAddressWithDomainHint(payload.address, openSettings.value.domains),
                 jwt: curJwt
             }
         } catch (e) {

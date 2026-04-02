@@ -87,10 +87,9 @@ const send = async () => {
             contentType: 'text',
             content: "",
         }
+        message.success(t("successSend"));
     } catch (error) {
         message.error(error.message || "error");
-    } finally {
-        message.success(t("successSend"));
     }
 }
 

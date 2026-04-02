@@ -94,6 +94,9 @@ const getOpenSettings = async (message, notification) => {
             enableAddressPassword: res["enableAddressPassword"] || false,
             statusUrl: res["statusUrl"] || "",
             enableGlobalTurnstileCheck: res["enableGlobalTurnstileCheck"] || false,
+            cloudflareWildcardDomains: res["cloudflareWildcardDomains"] || [],
+            activeCloudflareWildcardDomains: res["activeCloudflareWildcardDomains"] || [],
+            cloudflareAddressRetentionDays: res["cloudflareAddressRetentionDays"] || 90,
         });
         if (openSettings.value.needAuth) {
             showAuth.value = true;
@@ -202,6 +205,17 @@ const bindUserAddress = async () => {
     }
 }
 
+const getCloudflareWildcardSettings = async () => {
+    return await apiFetch(`/admin/cloudflare_wildcard_settings`);
+}
+
+const saveCloudflareWildcardSettings = async (settings) => {
+    return await apiFetch(`/admin/cloudflare_wildcard_settings`, {
+        method: 'POST',
+        body: JSON.stringify(settings)
+    });
+}
+
 export const api = {
     fetch: apiFetch,
     getSettings,
@@ -211,4 +225,6 @@ export const api = {
     adminShowAddressCredential,
     adminDeleteAddress,
     bindUserAddress,
+    getCloudflareWildcardSettings,
+    saveCloudflareWildcardSettings,
 }

@@ -40,6 +40,12 @@ api.post('/api/request_send_mail_access', async (c) => {
         if (message && message.includes("UNIQUE")) {
             return c.text(msgs.AlreadyRequestedMsg, 400)
         }
+        if (message && message.includes("not support")) {
+            return c.text(msgs.WildcardSendUnsupportedMsg, 400)
+        }
+        if (message && message.includes("Address expired")) {
+            return c.text(msgs.AddressExpiredMsg, 400)
+        }
         return c.text(msgs.OperationFailedMsg, 500)
     }
     return c.json({ status: "ok" })

@@ -22,6 +22,7 @@ const { t } = useI18n({
             addressCredentialTip: 'Please copy the Mail Address Credential and you can use it to login to your email account.',
             addressPassword: 'Address Password',
             linkWithAddressCredential: 'Open to auto login email link',
+            wildcardTip: 'Choose a wildcard root domain. The worker will return a concrete receive-only address that stays active for 90 days.',
         },
         zh: {
             address: '地址',
@@ -33,6 +34,7 @@ const { t } = useI18n({
             addressCredentialTip: '请复制邮箱地址凭证，你可以使用它登录你的邮箱。',
             addressPassword: '地址密码',
             linkWithAddressCredential: '打开即可自动登录邮箱的链接',
+            wildcardTip: '请选择一个泛域名根规则，worker 会返回一个仅收信且可保持 90 天有效的具体地址。',
         }
     }
 });
@@ -105,6 +107,9 @@ onMounted(async () => {
             </n-card>
         </n-modal>
         <n-card :bordered="false" embedded style="max-width: 600px;">
+            <n-alert type="info" :show-icon="false" :bordered="false" style="margin-bottom: 12px;">
+                {{ t('wildcardTip') }}
+            </n-alert>
             <n-form-item-row v-if="openSettings.prefix" :label="t('enablePrefix')">
                 <n-switch v-model:value="enablePrefix" :round="false" />
             </n-form-item-row>

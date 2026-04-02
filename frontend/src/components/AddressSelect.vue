@@ -8,6 +8,7 @@ import { Copy } from '@vicons/fa'
 
 import { useGlobalState } from '../store'
 import { api } from '../api'
+import { formatAddressWithDomainHint } from '../utils/wildcard-domain'
 
 const props = defineProps({
     showCopy: {
@@ -53,13 +54,7 @@ const localAddressCache = useLocalStorage("LocalAddressCache", [])
 const optionValueMap = new Map()
 
 const formatAddressLabel = (address) => {
-    if (!address) return address;
-    const domain = address.split('@')[1]
-    const domainLabel = openSettings.value.domains.find(
-        d => d.value === domain
-    )?.label;
-    if (!domainLabel) return address;
-    return address.replace('@' + domain, `@${domainLabel}`);
+    return formatAddressWithDomainHint(address, openSettings.value.domains);
 }
 
 const parseJwtAddress = (curJwt) => {
